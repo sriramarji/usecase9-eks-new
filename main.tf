@@ -27,7 +27,7 @@ module "eks" {
   private_subnets     = module.vpc.private_subnets
   cluster_role_arn    = module.iam.eks_cluster_role_arn
   node_role_arn       = module.iam.eks_node_role_arn
-  cluster_role_dependency = module.iam.eks_cluster_role
+  cluster_role_dependency = module.iam.eks_role_depends_on
   security_group_ids  = [module.security_group.eks_security_group_id]
 }
 
