@@ -1,7 +1,7 @@
 resource "aws_security_group" "eks" {
   name        = "${var.name}-eks-sg"
   description = "EKS security group"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 443
