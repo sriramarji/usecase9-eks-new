@@ -20,7 +20,7 @@ module "security_group" {
 }
 
 module "eks" {
-  source = "../../modules/eks"
+  source = "./modules/eks"
 
   name                = var.name
   public_subnets      = module.vpc.public_subnets
