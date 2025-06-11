@@ -30,5 +30,5 @@ variable "security_group_ids" {
 
 variable "cluster_role_dependency" {
     description = "cluster_role_dependency"
-    type        = string
+    type        = any
 }
