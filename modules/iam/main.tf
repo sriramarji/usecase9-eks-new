@@ -1,52 +1,61 @@
-resource "aws_iam_role" "ecs_execution_role" {
-  name = "${var.name}-ecs-role"
-
-  assume_role_policy = <<EOF
-{
-    "Version": "2008-10-17",
-    "Statement": [
-        {
-            "Sid": "",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "ecs-tasks.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
-EOF
+# IAM Role for EKS Cluster
+resource "aws_iam_role" "eks_role" {
+  name = "eksClusterRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "eks.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-resource "aws_iam_policy" "ecs_execution_policy" {
-  name = "${var.name}-ecs-policy"
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  role       = aws_iam_role.eks_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
-  role       = aws_iam_role.ecs_execution_role.name
-  policy_arn = aws_iam_policy.ecs_execution_policy.arn
+# IAM Role for EKS Node Group
+resource "aws_iam_role" "eks_node_role" {
+  name = "eksNodeGroupRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-output "ecs_role_arn" {
-    value = aws_iam_role.ecs_execution_role.arn
+resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_read_only" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+output "eks_cluster_role_arn" {
+    value = aws_iam_role.eks_role.arn
+}
+
+output "eks_node_role_arn" {
+    value = aws_iam_role.eks_node_role.arn
+}
+
+output "eks_role_depends_on" {
+  value = aws_iam_role.eks_role
 }
