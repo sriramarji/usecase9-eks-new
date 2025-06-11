@@ -25,7 +25,7 @@ variable "node_role_arn" {
 
 variable "security_group_ids" {
     description = "security_group_ids"
-    type        = string
+    type        = list(string)
 }
 
 variable "cluster_role_dependency" {
