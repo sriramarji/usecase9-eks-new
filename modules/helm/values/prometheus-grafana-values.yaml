@@ -1,0 +1,35 @@
+# values/prometheus-grafana-values.yaml
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  adminPassword: "securepassword"
+  service:
+    type: LoadBalancer
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-operated.monitoring.svc.cluster.local:9090
+      access: proxy
+      isDefault: true
+
+  dashboards:
+    default:
+      aws-lb-controller:
+        gnetId: 16613
+        revision: 1
+        datasource: Prometheus
+
+prometheus:
+  additionalPodMonitors:
+    - name: ${lb_controller_name}-monitor
+      namespaceSelector:
+        matchNames: ["kube-system"]
+      podMetricsEndpoints:
+        - port: http
+          path: /metrics
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: aws-load-balancer-controller

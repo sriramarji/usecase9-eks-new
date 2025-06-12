@@ -64,31 +64,59 @@ resource "helm_release" "loadbalancer_controller" {
 }
 
 
-resource "helm_release" "prometheus" {
-  name       = "prometheus"
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  namespace  = "monitoring"
-  version    = "56.6.1" # Check for latest compatible version
+#resource "helm_release" "prometheus" {
+#  name       = "prometheus"
+#  repository = "https://prometheus-community.github.io/helm-charts"
+#  chart      = "kube-prometheus-stack"
+#  namespace  = "monitoring"
+#  version    = "56.6.1" # Check for latest compatible version
+#
+#  create_namespace = true
+#
+#  set {
+#    name  = "prometheus.service.type"
+#    value = "LoadBalancer"
+#  }
+#
+#  set {
+#    name  = "grafana.enabled"
+#    value = "true"
+#  }
+#
+#  set {
+#    name  = "grafana.service.type"
+#    value = "LoadBalancer"
+#  }
+#}
 
-  create_namespace = true
 
-  set {
-    name  = "prometheus.service.type"
-    value = "LoadBalancer"
-  }
+data "helm_repository" "prometheus_community" {
+  name = "prometheus-community"
+  url  = "https://prometheus-community.github.io/helm-charts"
+}
 
-  set {
-    name  = "grafana.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "grafana.service.type"
-    value = "LoadBalancer"
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
   }
 }
 
+resource "helm_release" "prometheus_grafana_stack" {
+  name       = "kube-prometheus-stack"
+  repository = data.helm_repository.prometheus_community.metadata[0].url
+  chart      = "kube-prometheus-stack"
+  version    = "58.0.0" # Pin version for stability
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+
+  values = [templatefile("${path.module}/values/prometheus-grafana-values.yaml", {
+    lb_controller_name = helm_release.loadbalancer_controller.name
+  })]
+
+  depends_on = [
+    helm_release.loadbalancer_controller,
+    kubernetes_namespace.monitoring
+  ]
+}
 
 
 # Resource: Kubernetes Ingress Class
