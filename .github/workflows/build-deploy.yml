@@ -68,12 +68,17 @@ jobs:
           role-to-assume: arn:aws:iam::975049998898:role/githubaction-assumerole
           role-session-name: github-assume
           aws-region: us-east-1
-          
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
             --name $CLUSTER_NAME \
             --region $AWS_REGION
+            
+      - name: Verify Cluster Access
+        run: |
+          kubectl get nodes
+
 
       - name: Install Helm
         uses: azure/setup-helm@v3
