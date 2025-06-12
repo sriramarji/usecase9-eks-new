@@ -64,6 +64,14 @@ resource "helm_release" "loadbalancer_controller" {
 }
 
 
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
+}
+
+
+
 #resource "helm_release" "prometheus" {
 #  name       = "prometheus"
 #  namespace  = "monitor"
