@@ -79,23 +79,23 @@ resource "kubernetes_namespace" "monitoring" {
 
 
 
-#resource "helm_release" "prometheus" {
-#  name       = "prometheus"
-#  namespace  = "monitor"
-#  create_namespace = true
-#  repository = "https://prometheus-community.github.io/helm-charts"
-#  chart      = "prometheus"
-#  version    = "25.17.0" # Choose latest compatible
-#
-#  values = [file("${path.module}/prometheus-values.yaml")]
-#}
-#
-#resource "helm_release" "grafana" {
-#  name       = "grafana"
-#  namespace  = "monitor"
-#  repository = "https://grafana.github.io/helm-charts"
-#  chart      = "grafana"
-#  version    = "7.3.10" # Choose latest compatible
-#
-#  values = [file("${path.module}/grafana-values.yaml")]
-#}
+resource "helm_release" "prometheus" {
+  name       = "prometheus"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  create_namespace = true
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus"
+  version    = "25.17.0" # Choose latest compatible
+
+  values = [file("${path.module}/prometheus-values.yaml")]
+}
+
+resource "helm_release" "grafana" {
+  name       = "grafana"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "grafana"
+  version    = "7.3.10" # Choose latest compatible
+
+  values = [file("${path.module}/grafana-values.yaml")]
+}
