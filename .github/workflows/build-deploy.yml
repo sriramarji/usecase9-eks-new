@@ -107,6 +107,6 @@ jobs:
          #  kubectl apply -f kubernetes/ingress.yaml
          # sed -i 's@CONTAINER_IMAGE@'"$ECR_REPOSITORY:${{ github.sha }}"'@' kubernetes/deployment.yml
          #sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
-         #${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
+         ##${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
 
   
