@@ -63,133 +63,31 @@ resource "helm_release" "loadbalancer_controller" {
     
 }
 
+resource "helm_release" "prometheus" {
+  name       = "prometheus"
+  namespace  = "monitoring"
+  create_namespace = true
 
-#resource "helm_release" "prometheus" {
-#  name       = "prometheus"
-#  repository = "https://prometheus-community.github.io/helm-charts"
-#  chart      = "kube-prometheus-stack"
-#  namespace  = "monitoring"
-#  version    = "56.6.1" # Check for latest compatible version
-#
-#  create_namespace = true
-#
-#  set {
-#    name  = "prometheus.service.type"
-#    value = "LoadBalancer"
-#  }
-#
-#  set {
-#    name  = "grafana.enabled"
-#    value = "true"
-#  }
-#
-#  set {
-#    name  = "grafana.service.type"
-#    value = "LoadBalancer"
-#  }
-#}
-
-
-# Add Kubernetes provider for namespace creation
-provider "kubernetes" {
-  host                   = var.cluster_endpoint
-  cluster_ca_certificate = base64decode(var.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
-
-# Create monitoring namespace
-resource "kubernetes_namespace" "monitoring" {
-  metadata {
-    name = "monitoring"
-  }
-}
-
-# Install kube-prometheus-stack
-resource "helm_release" "prometheus_grafana_stack" {
-  name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
-  version    = "58.0.0" # Pin version for stability
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-
-  set {
-    name  = "prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues"
-    value = "false"
-  }
-
-  set {
-    name  = "prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues"
-    value = "false"
-  }
-
-  set {
-    name  = "grafana.adminPassword"
-    value = "admin@123" # Change to a secure password
-  }
-
-  set {
-    name  = "grafana.service.type"
-    value = "LoadBalancer"
-  }
+  version    = "56.6.0" # Check latest
 
   values = [
-    <<-EOT
-    prometheus:
-      additionalPodMonitors:
-        - name: aws-lb-controller-monitor
-          namespaceSelector:
-            matchNames: ["kube-system"]
-          podMetricsEndpoints:
-            - port: http
-              path: /metrics
-          selector:
-            matchLabels:
-              app.kubernetes.io/name: aws-load-balancer-controller
-    grafana:
-      additionalDataSources:
-        - name: Prometheus
-          type: prometheus
-          url: http://prometheus-operated.monitoring.svc.cluster.local:9090
-          access: proxy
-          isDefault: true
-      dashboards:
-        default:
-          aws-lb-controller:
-            gnetId: 16613
-            revision: 1
-            datasource: Prometheus
-    EOT
-  ]
-
-  depends_on = [
-    helm_release.loadbalancer_controller,
-    kubernetes_namespace.monitoring
+    file("prometheus-values.yaml")
   ]
 }
 
-# Output Grafana details
-output "grafana_external_url" {
-  description = "Grafana Dashboard URL"
-  value       = "http://${helm_release.prometheus_grafana_stack.name}-grafana.${helm_release.prometheus_grafana_stack.namespace}.svc.cluster.local"
-}
+resource "helm_release" "grafana" {
+  name       = "grafana"
+  namespace  = "monitoring"
 
-output "grafana_loadbalancer_note" {
-  value = <<-EOT
-  Grafana is exposed via LoadBalancer. Get external URL with:
-  kubectl get svc -n monitoring ${helm_release.prometheus_grafana_stack.name}-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-  EOT
-}
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "grafana"
+  version    = "7.3.8" # Check latest
 
-# Resource: Kubernetes Ingress Class
-#resource "kubernetes_ingress_class_v1" "ingress_class_default" {
-#  depends_on = [helm_release.loadbalancer_controller]
-#  metadata {
-#    name = "my-aws-ingress-class"
-#    annotations = {
-#      "ingressclass.kubernetes.io/is-default-class" = "true"
-#    }
-#  }  
-#  spec {
-#    controller = "ingress.k8s.aws/alb"
-#  }
-#}
+  values = [
+    file("grafana-values.yaml")
+  ]
+
+  depends_on = [helm_release.prometheus]
+}
