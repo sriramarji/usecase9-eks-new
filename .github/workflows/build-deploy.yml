@@ -84,22 +84,20 @@ jobs:
           kubectl get nodes
       
       - name: Uninstall ALB Ingress Controller
-        run: |
-          echo "Uninstalling ALB Ingress Controller..."
-    
-           # Uninstall Helm release
-          helm uninstall aws-load-balancer-controller -n kube-system || echo "Helm release not found"
+        run: |
+          helm uninstall aws-load-balancer-controller -n kube-system || echo "Helm release not found"
+          kubectl delete crd targetgroupbindings.elbv2.k8s.aws || echo "CRD not found"
+          kubectl delete serviceaccount aws-load-balancer-controller -n kube-system || echo "Service account not found"
+          kubectl delete ingress --all -n default || echo "No ingress resources found"
+          
 
-          # Delete CRDs
-          kubectl delete crd targetgroupbindings.elbv2.k8s.aws || echo "CRD not found"
+      - name: Deployment + Service + Ingress
+        run: |
+         sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
+         kubectl apply -f kubernetes/deployment.yml
+         kubectl apply -f kubernetes/ingress.yml 
       
-          # Delete service account
-          kubectl delete serviceaccount aws-load-balancer-controller -n kube-system || echo "Service account not found"
-      
-          # Optionally delete ingress resources
-          kubectl delete ingress --all -n default || echo "No ingress resources found"
-      
-          echo "ALB Ingress Controller uninstalled."
+
 
 #      - name: Install Helm
 #        uses: azure/setup-helm@v3
@@ -117,11 +115,7 @@ jobs:
 #            --set region=$AWS_REGION \
 #            --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
 
-      - name: Deployment + Service + Ingress
-        run: |
-          sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
-          kubectl apply -f kubernetes/deployment.yml
-          kubectl apply -f kubernetes/ingress.yml
+        
          
          #  kubectl apply -f kubernetes/ingress.yaml
          # sed -i 's@CONTAINER_IMAGE@'"$ECR_REPOSITORY:${{ github.sha }}"'@' kubernetes/deployment.yml
