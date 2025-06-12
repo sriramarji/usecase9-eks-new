@@ -72,6 +72,11 @@ jobs:
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --region us-east-1 --name test-eks
+          cat ~/.kube/config
+          kubectl config current-context
+
+
+      
 
       - name: Verify Cluster Access
         run: |
