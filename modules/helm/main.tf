@@ -90,29 +90,6 @@ resource "helm_release" "prometheus" {
 }
 
 
-data "kubernetes_service" "grafana" {
-  metadata {
-    name      = "prometheus-grafana"
-    namespace = "monitoring"
-  }
-}
-
-data "kubernetes_service" "prometheus" {
-  metadata {
-    name      = "prometheus-kube-prometheus-prometheus"
-    namespace = "monitoring"
-  }
-}
-
-
-output "grafana_url" {
-  value = data.kubernetes_service.grafana.status[0].load_balancer[0].ingress[0].hostname
-}
-
-output "prometheus_url" {
-  value = data.kubernetes_service.prometheus.status[0].load_balancer[0].ingress[0].hostname
-}
-
 
 # Resource: Kubernetes Ingress Class
 #resource "kubernetes_ingress_class_v1" "ingress_class_default" {
