@@ -71,10 +71,8 @@ jobs:
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig \
-            --name $CLUSTER_NAME \
-            --region $AWS_REGION
-            
+          aws eks update-kubeconfig --region us-east-1 --name test-eks
+
       - name: Verify Cluster Access
         run: |
           kubectl get nodes
