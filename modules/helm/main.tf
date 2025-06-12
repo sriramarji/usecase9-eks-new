@@ -90,6 +90,24 @@ resource "helm_release" "prometheus" {
 }
 
 
+data "kubernetes_service" "grafana" {
+  metadata {
+    name      = "prometheus-grafana"
+    namespace = "monitoring"
+  }
+}
+
+data "kubernetes_service" "prometheus" {
+  metadata {
+    name      = "prometheus-kube-prometheus-prometheus"
+    namespace = "monitoring"
+  }
+}
+
+
+
+
+
 # Resource: Kubernetes Ingress Class
 #resource "kubernetes_ingress_class_v1" "ingress_class_default" {
 #  depends_on = [helm_release.loadbalancer_controller]
