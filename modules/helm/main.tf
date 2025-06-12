@@ -35,7 +35,6 @@ resource "helm_release" "loadbalancer_controller" {
   set {
     name = "image.repository"
     value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/aws-load-balancer-controller" 
-    # Changes based on Region - This is for us-east-1 Additional Reference: https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
   }       
 
   set {
@@ -70,6 +69,7 @@ resource "helm_release" "loadbalancer_controller" {
     
 }
 
+# Create Namespace for grafana and prometheus
 
 resource "kubernetes_namespace" "monitoring" {
   metadata {
@@ -77,6 +77,7 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
+# Helm to install and setup prometheus and grafana 
 resource "helm_release" "prometheus_grafana_stack" {
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
@@ -137,79 +138,3 @@ resource "helm_release" "prometheus_grafana_stack" {
   ]
 }
 
-#resource "helm_release" "prometheus_grafana_stack" {
-#  name       = "kube-prometheus-stack"
-#  repository = "https://prometheus-community.github.io/helm-charts"
-#  chart      = "kube-prometheus-stack"
-#  version    = "58.0.0"
-#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-#  timeout    = 600 # Increase timeout to 10 minutes
-#  
-#  # Retry mechanism
-#  max_history     = 5
-#  cleanup_on_fail = true
-#  wait            = true
-#  wait_for_jobs   = true
-#
-#  values = [
-#    <<-EOT
-#    prometheus:
-#      enabled: true
-#      prometheusSpec:
-#        scrapeInterval: 30s
-#        evaluationInterval: 30s
-#        resources:
-#          requests:
-#            memory: 1Gi
-#            cpu: 500m
-#      additionalPodMonitors:
-#        - name: aws-lb-controller-monitor
-#          namespaceSelector:
-#            matchNames: ["kube-system"]
-#          podMetricsEndpoints:
-#            - port: http
-#              path: /metrics
-#          selector:
-#            matchLabels:
-#              app.kubernetes.io/name: aws-load-balancer-controller
-#    
-#    grafana:
-#      enabled: true
-#      adminPassword: "admin"
-#      service:
-#        type: LoadBalancer
-#        port: 80
-#      resources:
-#        requests:
-#          memory: 512Mi
-#          cpu: 300m
-#    EOT
-#  ]
-#
-#  depends_on = [
-#    helm_release.loadbalancer_controller,
-#    kubernetes_namespace.monitoring
-#  ]
-#}
-
-
-#resource "helm_release" "prometheus" {
-#  name       = "prometheus"
-#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-#  create_namespace = true
-#  repository = "https://prometheus-community.github.io/helm-charts"
-#  chart      = "prometheus"
-#  version    = "25.17.0" # Choose latest compatible
-#
-#  values = [file("${path.module}/prometheus-values.yaml")]
-#}
-#
-#resource "helm_release" "grafana" {
-#  name       = "grafana"
-#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-#  repository = "https://grafana.github.io/helm-charts"
-#  chart      = "grafana"
-#  version    = "7.3.10" # Choose latest compatible
-#
-#  values = [file("${path.module}/grafana-values.yaml")]
-#}

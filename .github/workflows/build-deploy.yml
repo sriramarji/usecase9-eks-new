@@ -39,8 +39,7 @@ jobs:
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:latest
 
-     # - name: Save Service1 Image Tag
-     #   run: echo "SERVICE1_IMAGE=${{ vars.ECR_REGISTRY }}/test-repo-1:${{ github.sha }}" >> $GITHUB_ENV
+    
   
   deploy:
     name: Deploy App and ALB Ingress
@@ -69,42 +68,13 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-#      - name: Setup kubectl
-#        uses: azure/setup-kubectl@v3
-#        with:
-#          version: 'v1.32.0'   
-#          architecture: 'amd64'
-
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --region us-east-1 --name test-eks
 
       - name: Verify Cluster Access
         run: |
-          kubectl get nodes
-      
-#      - name: Uninstall ALB Ingress Controller
-#        run: |
-#          helm uninstall aws-load-balancer-controller -n kube-system || echo "Helm release not found"
-#          kubectl delete crd targetgroupbindings.elbv2.k8s.aws || echo "CRD not found"
-#          kubectl delete serviceaccount aws-load-balancer-controller -n kube-system || echo "Service account not found"
-#          echo $(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
-#          kubectl delete ingress --all -n default || echo "No ingress resources found"
-      
-#      - name: Install AWS Load Balancer Controller
-#        run: |
-#          helm repo add eks https://aws.github.io/eks-charts
-#          helm repo update
-#          kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
-#          helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-#            --set clusterName=test-eks \
-#            --set serviceAccount.create=false \
-#            --set serviceAccount.name=aws-load-balancer-controller \
-#            --set region=us-east-1 \
-#            --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text) \
-#            --namespace kube-system
-
-          
+          kubectl get nodes    
 
       - name: Deployment + Service + Ingress
         run: |
@@ -112,49 +82,3 @@ jobs:
          kubectl apply -f kubernetes/deployment.yml
          kubectl apply -f kubernetes/ingress.yml
 
-#      - name: Force delete stuck Ingress
-#        run: |
-#          echo "Starting kubectl proxy..."
-#          kubectl proxy &
-#       
-#          echo "Waiting for proxy to start..."
-#          sleep 5
-#       
-#          echo "Removing finalizers from Ingress..."
-#          kubectl patch ingress my-app-ingress -n default -p '{"metadata":{"finalizers":[]}}' --type=merge || echo "Patch failed or already removed"
-#       
-#          echo "Force deleting Ingress via Kubernetes API..."
-#          curl -s -X DELETE http://127.0.0.1:8001/apis/networking.k8s.io/v1/namespaces/default/ingresses/my-app-ingress \
-#            -H "Content-Type: application/json" \
-#            -d '{"kind":"DeleteOptions","apiVersion":"v1","gracePeriodSeconds":0,"propagationPolicy":"Foreground"}'
-#       
-#          echo "Ingress deletion requested."
-
- 
-      
-
-
-#      - name: Install Helm
-#        uses: azure/setup-helm@v3
-
-#      - name: Install AWS Load Balancer Controller via Helm
-#        run: |
-#          helm repo add eks https://aws.github.io/eks-charts
-#          helm repo update
-#
-#          helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
-#            -n kube-system \
-#            --set clusterName=$CLUSTER_NAME \
-#            --set serviceAccount.create=true \
-#            --set serviceAccount.name=aws-load-balancer-controller \
-#            --set region=$AWS_REGION \
-#            --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
-
-        
-         
-         #  kubectl apply -f kubernetes/ingress.yaml
-         # sed -i 's@CONTAINER_IMAGE@'"$ECR_REPOSITORY:${{ github.sha }}"'@' kubernetes/deployment.yml
-         #sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
-         ##${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
-
-  
