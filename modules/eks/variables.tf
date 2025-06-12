@@ -32,3 +32,9 @@ variable "cluster_role_dependency" {
     description = "cluster_role_dependency"
     type        = any
 }
+
+variable "eks_oidc_root_ca_thumbprint" {
+}
+
+#variable "aws_eks_cluster_identity" {
+#}
