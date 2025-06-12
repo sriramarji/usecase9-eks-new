@@ -39,8 +39,7 @@ resource "aws_iam_openid_connect_provider" "oidc_provider" {
   thumbprint_list = [var.eks_oidc_root_ca_thumbprint]
   url             = aws_eks_cluster.eks.certificate_authority[0].data
 
-  tags =
-    {
+  tags = {
       Name = "${var.name}-eks-irsa"
     }
 }
