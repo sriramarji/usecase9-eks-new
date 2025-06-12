@@ -77,6 +77,60 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
+resource "helm_release" "prometheus_grafana_stack" {
+  name       = "kube-prometheus-stack"
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "kube-prometheus-stack"
+  version    = "58.0.0"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  timeout    = 600 # Increase timeout to 10 minutes
+  
+  # Retry mechanism
+  max_history     = 5
+  cleanup_on_fail = true
+  wait            = true
+  wait_for_jobs   = true
+
+  values = [
+    <<-EOT
+    prometheus:
+      enabled: true
+      prometheusSpec:
+        scrapeInterval: 30s
+        evaluationInterval: 30s
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+      additionalPodMonitors:
+        - name: aws-lb-controller-monitor
+          namespaceSelector:
+            matchNames: ["kube-system"]
+          podMetricsEndpoints:
+            - port: http
+              path: /metrics
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: aws-load-balancer-controller
+    
+    grafana:
+      enabled: true
+      adminPassword: "admin"
+      service:
+        type: LoadBalancer
+        port: 80
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 300m
+    EOT
+  ]
+
+  depends_on = [
+    helm_release.loadbalancer_controller,
+    kubernetes_namespace.monitoring
+  ]
+}
 
 
 #resource "helm_release" "prometheus" {
