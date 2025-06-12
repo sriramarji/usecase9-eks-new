@@ -29,12 +29,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker Image for Service1
+      - name: Build Docker Image 
         run: |
           docker build -t ${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }} ./Api-Flask
           docker tag ${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }} ${{ vars.ECR_REGISTRY }}/flask-app:latest
 
-      - name: Push Docker Image for Service1
+      - name: Push Docker Image 
         run: |
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:latest
@@ -66,7 +66,7 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: '1.32'
+          version: '1.31.9'
 
       - name: Update kubeconfig
         run: |
