@@ -4,7 +4,7 @@ on:
     paths:
       - 'Api-Flask/**'
       - 'kubernetes/**'
-      - '.github/workflows/docker.yml'
+      - '.github/workflows/build-deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -94,8 +94,8 @@ jobs:
         run: |
           sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
           kubectl apply -f kubernetes/deployment.yaml
-          kubectl apply -f kubernetes/ingress.yaml
-
+         
+         #  kubectl apply -f kubernetes/ingress.yaml
          # sed -i 's@CONTAINER_IMAGE@'"$ECR_REPOSITORY:${{ github.sha }}"'@' kubernetes/deployment.yml
          #sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
          #${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
