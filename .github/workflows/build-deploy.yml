@@ -82,22 +82,40 @@ jobs:
       - name: Verify Cluster Access
         run: |
           kubectl get nodes
+      
+      - name: Uninstall ALB Ingress Controller
+        run: |
+          echo "Uninstalling ALB Ingress Controller..."
+    
+           # Uninstall Helm release
+          helm uninstall aws-load-balancer-controller -n kube-system || echo "Helm release not found"
+
+          # Delete CRDs
+          kubectl delete crd targetgroupbindings.elbv2.k8s.aws || echo "CRD not found"
+      
+          # Delete service account
+          kubectl delete serviceaccount aws-load-balancer-controller -n kube-system || echo "Service account not found"
+      
+          # Optionally delete ingress resources
+          kubectl delete ingress --all -n default || echo "No ingress resources found"
+      
+          echo "ALB Ingress Controller uninstalled."
 
 #      - name: Install Helm
 #        uses: azure/setup-helm@v3
 
-      - name: Install AWS Load Balancer Controller via Helm
-        run: |
-          helm repo add eks https://aws.github.io/eks-charts
-          helm repo update
-
-          helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
-            -n kube-system \
-            --set clusterName=$CLUSTER_NAME \
-            --set serviceAccount.create=true \
-            --set serviceAccount.name=aws-load-balancer-controller \
-            --set region=$AWS_REGION \
-            --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
+#      - name: Install AWS Load Balancer Controller via Helm
+#        run: |
+#          helm repo add eks https://aws.github.io/eks-charts
+#          helm repo update
+#
+#          helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+#            -n kube-system \
+#            --set clusterName=$CLUSTER_NAME \
+#            --set serviceAccount.create=true \
+#            --set serviceAccount.name=aws-load-balancer-controller \
+#            --set region=$AWS_REGION \
+#            --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
 
       - name: Deployment + Service + Ingress
         run: |
