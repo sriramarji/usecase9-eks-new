@@ -90,27 +90,76 @@ resource "helm_release" "loadbalancer_controller" {
 #}
 
 
-data "helm_repository" "prometheus_community" {
-  name = "prometheus-community"
-  url  = "https://prometheus-community.github.io/helm-charts"
+# Add Kubernetes provider for namespace creation
+provider "kubernetes" {
+  host                   = var.cluster_endpoint
+  cluster_ca_certificate = base64decode(var.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
+# Create monitoring namespace
 resource "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitoring"
   }
 }
 
+# Install kube-prometheus-stack
 resource "helm_release" "prometheus_grafana_stack" {
   name       = "kube-prometheus-stack"
-  repository = data.helm_repository.prometheus_community.metadata[0].url
+  repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
   version    = "58.0.0" # Pin version for stability
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
 
-  values = [templatefile("${path.module}/values/prometheus-grafana-values.yaml", {
-    lb_controller_name = helm_release.loadbalancer_controller.name
-  })]
+  set {
+    name  = "prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues"
+    value = "false"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues"
+    value = "false"
+  }
+
+  set {
+    name  = "grafana.adminPassword"
+    value = "admin@123" # Change to a secure password
+  }
+
+  set {
+    name  = "grafana.service.type"
+    value = "LoadBalancer"
+  }
+
+  values = [
+    <<-EOT
+    prometheus:
+      additionalPodMonitors:
+        - name: aws-lb-controller-monitor
+          namespaceSelector:
+            matchNames: ["kube-system"]
+          podMetricsEndpoints:
+            - port: http
+              path: /metrics
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: aws-load-balancer-controller
+    grafana:
+      additionalDataSources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-operated.monitoring.svc.cluster.local:9090
+          access: proxy
+          isDefault: true
+      dashboards:
+        default:
+          aws-lb-controller:
+            gnetId: 16613
+            revision: 1
+            datasource: Prometheus
+    EOT
+  ]
 
   depends_on = [
     helm_release.loadbalancer_controller,
@@ -118,6 +167,18 @@ resource "helm_release" "prometheus_grafana_stack" {
   ]
 }
 
+# Output Grafana details
+output "grafana_external_url" {
+  description = "Grafana Dashboard URL"
+  value       = "http://${helm_release.prometheus_grafana_stack.name}-grafana.${helm_release.prometheus_grafana_stack.namespace}.svc.cluster.local"
+}
+
+output "grafana_loadbalancer_note" {
+  value = <<-EOT
+  Grafana is exposed via LoadBalancer. Get external URL with:
+  kubectl get svc -n monitoring ${helm_release.prometheus_grafana_stack.name}-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+  EOT
+}
 
 # Resource: Kubernetes Ingress Class
 #resource "kubernetes_ingress_class_v1" "ingress_class_default" {
