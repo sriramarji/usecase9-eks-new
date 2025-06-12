@@ -90,7 +90,7 @@ jobs:
             --set region=$AWS_REGION \
             --set vpcId=$(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
 
-      - name: Deploy App: Deployment + Service + Ingress
+      - name: Deployment + Service + Ingress
         run: |
           sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
           kubectl apply -f kubernetes/deployment.yaml
