@@ -63,31 +63,28 @@ resource "helm_release" "loadbalancer_controller" {
     
 }
 
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = monitoring
+  }
+}
+
 resource "helm_release" "prometheus" {
   name       = "prometheus"
-  namespace  = "monitoring"
-  create_namespace = true
-
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
   repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  version    = "56.6.0" # Check latest
+  chart      = "prometheus"
+  version    = "25.17.0" # Choose latest compatible
 
-  values = [
-    file("${path.module}/prometheus-values.yaml")
-  ]
+  values = [file("${path.module}/prometheus-values.yaml")]
 }
 
 resource "helm_release" "grafana" {
   name       = "grafana"
-  namespace  = "monitoring"
-
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
   repository = "https://grafana.github.io/helm-charts"
   chart      = "grafana"
-  version    = "7.3.8" # Check latest
+  version    = "7.3.10" # Choose latest compatible
 
-  values = [
-    file("${path.module}/grafana-values.yaml")
-  ]
-
-  depends_on = [helm_release.prometheus]
+  values = [file("${path.module}/grafana-values.yaml")]
 }

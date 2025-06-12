@@ -1,36 +1,18 @@
+adminPassword: "admin123"
+
 service:
   type: LoadBalancer
 
-adminUser: admin
-adminPassword: admin123
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClassName: gp2
 
-dashboardProviders:
-  dashboardproviders.yaml:
+datasources:
+  datasources.yaml:
     apiVersion: 1
-    providers:
-      - name: 'default'
-        orgId: 1
-        folder: ''
-        type: file
-        disableDeletion: false
-        updateIntervalSeconds: 10
-        options:
-          path: /var/lib/grafana/dashboards/default
-
-dashboards:
-  default:
-    kubernetes-cluster:
-      json: |
-        {
-          "annotations": {
-            "list": []
-          },
-          "editable": true,
-          "gnetId": null,
-          "graphTooltip": 0,
-          "id": null,
-          "panels": [],
-          "schemaVersion": 16,
-          "title": "Kubernetes Cluster Overview",
-          "version": 0
-        }
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus-server.monitoring.svc.cluster.local
