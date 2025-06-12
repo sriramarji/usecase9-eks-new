@@ -63,6 +63,33 @@ resource "helm_release" "loadbalancer_controller" {
     
 }
 
+
+resource "helm_release" "prometheus" {
+  name       = "prometheus"
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "kube-prometheus-stack"
+  namespace  = "monitoring"
+  version    = "56.6.1" # Check for latest compatible version
+
+  create_namespace = true
+
+  set {
+    name  = "prometheus.service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "grafana.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "grafana.service.type"
+    value = "LoadBalancer"
+  }
+}
+
+
 # Resource: Kubernetes Ingress Class
 #resource "kubernetes_ingress_class_v1" "ingress_class_default" {
 #  depends_on = [helm_release.loadbalancer_controller]
