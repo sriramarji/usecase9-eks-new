@@ -73,7 +73,7 @@ resource "helm_release" "prometheus" {
   version    = "56.6.0" # Check latest
 
   values = [
-    file("prometheus-values.yaml")
+    file("${path.module}/prometheus-values.yaml")
   ]
 }
 
@@ -86,7 +86,7 @@ resource "helm_release" "grafana" {
   version    = "7.3.8" # Check latest
 
   values = [
-    file("grafana-values.yaml")
+    file("${path.module}/grafana-values.yaml")
   ]
 
   depends_on = [helm_release.prometheus]
