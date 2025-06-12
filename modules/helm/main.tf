@@ -65,7 +65,7 @@ resource "helm_release" "loadbalancer_controller" {
 
 resource "kubernetes_namespace" "monitoring" {
   metadata {
-    name = monitoring
+    name = "monitoring"
   }
 }
 
