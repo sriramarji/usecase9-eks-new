@@ -88,7 +88,8 @@ jobs:
           helm uninstall aws-load-balancer-controller -n kube-system || echo "Helm release not found"
           kubectl delete crd targetgroupbindings.elbv2.k8s.aws || echo "CRD not found"
           kubectl delete serviceaccount aws-load-balancer-controller -n kube-system || echo "Service account not found"
-          kubectl delete ingress --all -n default || echo "No ingress resources found"
+          echo $(aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION --query "cluster.resourcesVpcConfig.vpcId" --output text)
+#          kubectl delete ingress --all -n default || echo "No ingress resources found"
           
 
 #      - name: Deployment + Service + Ingress
