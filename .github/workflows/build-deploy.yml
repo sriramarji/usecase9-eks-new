@@ -91,11 +91,11 @@ jobs:
           kubectl delete ingress --all -n default || echo "No ingress resources found"
           
 
-      - name: Deployment + Service + Ingress
-        run: |
-         sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
-         kubectl apply -f kubernetes/deployment.yml
-         kubectl apply -f kubernetes/ingress.yml 
+#      - name: Deployment + Service + Ingress
+#        run: |
+#         sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
+#         kubectl apply -f kubernetes/deployment.yml
+#         kubectl apply -f kubernetes/ingress.yml 
       
 
 
