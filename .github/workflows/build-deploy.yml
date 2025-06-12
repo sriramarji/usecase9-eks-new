@@ -110,7 +110,26 @@ jobs:
         run: |
          sed -i 's@CONTAINER_IMAGE@'"${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}"'@' kubernetes/deployment.yml
          kubectl apply -f kubernetes/deployment.yml
-         kubectl delete ingress my-app-ingress --grace-period=0 --force
+#         kubectl delete ingress my-app-ingress --grace-period=0 --force
+
+      - name: Force delete stuck Ingress
+        run: |
+          echo "Starting kubectl proxy..."
+          kubectl proxy &
+       
+          echo "Waiting for proxy to start..."
+          sleep 5
+       
+          echo "Removing finalizers from Ingress..."
+          kubectl patch ingress my-app-ingress -n default -p '{"metadata":{"finalizers":[]}}' --type=merge || echo "Patch failed or already removed"
+       
+          echo "Force deleting Ingress via Kubernetes API..."
+          curl -s -X DELETE http://127.0.0.1:8001/apis/networking.k8s.io/v1/namespaces/default/ingresses/my-app-ingress \
+            -H "Content-Type: application/json" \
+            -d '{"kind":"DeleteOptions","apiVersion":"v1","gracePeriodSeconds":0,"propagationPolicy":"Foreground"}'
+       
+          echo "Ingress deletion requested."
+
  
       
 
