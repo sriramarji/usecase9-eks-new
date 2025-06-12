@@ -68,7 +68,6 @@ resource "helm_release" "prometheus" {
   name       = "prometheus"
   namespace  = "monitoring"
   create_namespace = true
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus"
   version    = "25.17.0" # Choose latest compatible
