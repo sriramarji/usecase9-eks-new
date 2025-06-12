@@ -3,11 +3,6 @@ adminPassword: "admin123"
 service:
   type: LoadBalancer
 
-persistence:
-  enabled: true
-  size: 2Gi
-  storageClassName: gp2
-
 datasources:
   datasources.yaml:
     apiVersion: 1
