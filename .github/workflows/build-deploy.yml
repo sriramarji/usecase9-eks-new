@@ -55,13 +55,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.32.0'   
-          architecture: 'amd64'
-
+      
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -69,22 +63,28 @@ jobs:
           role-session-name: github-assume
           aws-region: us-east-1
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+#      - name: Setup kubectl
+#        uses: azure/setup-kubectl@v3
+#        with:
+#          version: 'v1.32.0'   
+#          architecture: 'amd64'
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --region us-east-1 --name test-eks
-          cat ~/.kube/config
-          kubectl config current-context
-
-
-      
 
       - name: Verify Cluster Access
         run: |
           kubectl get nodes
 
-
-      - name: Install Helm
-        uses: azure/setup-helm@v3
+#      - name: Install Helm
+#        uses: azure/setup-helm@v3
 
       - name: Install AWS Load Balancer Controller via Helm
         run: |
