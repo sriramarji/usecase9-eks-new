@@ -1,10 +1,8 @@
   terraform {
   backend "s3" {
     bucket = "terraform-remote-st"
-    key    = "eks-demo/terraform.tfstate"
+    key    = "uc9-new/terraform.tfstate"
     region = "us-east-1" 
- 
-    # For State Locking
-    dynamodb_table = "terraform-locks"    
+    use_lockfile = true    
   } 
   } 
