@@ -81,7 +81,7 @@ jobs:
         id: plan
         if: github.ref == 'refs/heads/main' && (github.event_name == 'pull_request' || github.event_name == 'push')
        # if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -input=false -lock=false
 
 #      - name: Install terraform-docs
 #        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -146,8 +146,8 @@ jobs:
 
       - name: Terraform Apply
         if: contains(github.event.head_commit.message, 'terraform apply')
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve 
 
       - name: Terraform Destroy
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        run: terraform destroy -auto-approve
+        run: terraform destroy -auto-approve -lock=false
