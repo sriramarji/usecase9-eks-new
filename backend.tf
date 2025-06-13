@@ -1,7 +1,7 @@
   terraform {
   backend "s3" {
     bucket = "terraform-remote-st"
-    key    = "eks/terraform.tfstate"
+    key    = "eks-demo/terraform.tfstate"
     region = "us-east-1" 
  
     # For State Locking
