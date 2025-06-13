@@ -39,7 +39,7 @@ jobs:
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:${{ github.sha }}
           docker push ${{ vars.ECR_REGISTRY }}/flask-app:latest
 
-    
+     
   
   deploy:
     name: Deploy App and ALB Ingress
@@ -74,7 +74,8 @@ jobs:
 
       - name: Verify Cluster Access
         run: |
-          kubectl get nodes    
+          kubectl get nodes
+                
 
       - name: Deployment + Service + Ingress
         run: |
@@ -82,3 +83,6 @@ jobs:
          kubectl apply -f kubernetes/deployment.yml
          kubectl apply -f kubernetes/ingress.yml
 
+
+
+  
