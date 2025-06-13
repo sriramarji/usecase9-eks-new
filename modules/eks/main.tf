@@ -7,6 +7,9 @@ resource "aws_eks_cluster" "eks" {
     subnet_ids = var.public_subnets
     security_group_ids = var.security_group_ids
   }
+  
+  # Enable EKS Cluster Control Plane Logging
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   depends_on = [var.cluster_role_dependency]
 }
